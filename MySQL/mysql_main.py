@@ -1,13 +1,17 @@
 import mysql.connector
 from mysql.connector import Error
+import os
+def limpiar_pantalla():
+    if os.name == 'nt':
+        os.system('cls')
 
 def conectar_mysql():
 	try:
 		conexion = mysql.connector.connect(
 			host="localhost", # Servidor MySQL
-			database="EjemploBD", # Nombre de la base de datos
-			user="root",
-			password=""
+			database="mysql_python", # Nombre de la base de datos
+			user="root", # Nombre de usuario de MySQL
+			password="root" # Contraseña de usuario de MySQL
 		)
 
 		if conexion.is_connected():
@@ -31,7 +35,7 @@ def crear_tabla_usuario(conexion):
 		cursor = conexion.cursor()
 
 		crear_tabla = """
-		CREATE TABLE IF NOT EXIST usuario (
+		CREATE TABLE usuarios (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		nombre VARCHAR(100) NOT NULL,
 		email VARCHAR(100) UNIQUE NOT NULL,
@@ -47,15 +51,14 @@ def crear_tabla_usuario(conexion):
 		print(f"Error al crear tabla: {e}")
 
 def insertar_usuario(conexion, nombre, email, edad):
-
 	try:
 		cursor = conexion.cursor()
 
-		insertar_sql = "INSERTAR INTO usuarios (nombre, email, edad) VALUES (%s, %s, %s)"
+		insertar_sql = "INSERT INTO usuarios (nombre, email, edad) VALUES (%s, %s, %s)"
 		datos_usuario = (nombre, email, edad)
 
 		cursor.execute(insertar_sql, datos_usuario)
-		conexion.comit()
+		conexion.commit()
 
 		print(f"Usuario '{nombre}' insertado correctamente (ID: {cursor.lastrowid}")
 	except Error as e:
@@ -68,26 +71,27 @@ def consultar_usuarios(conexion):
 		cursor.execute(consulta_sql)
 
 		usuarios = cursor.fetchall()
-
+		
 		print("\nLista de usuarios:")
-		print("-" * 80)
-		print(f"{'ID':<5} {'NOMBRE':<20} {'EMAIL':<30} {'EDAD':<5} {'FECHA CREACION'}")
+		print("┌"+ "─" * 82 + "┐") # Carácter "Box Drawing" (línea sólida)
+		print(f"{'ID':<5} {'NOMBRE':<20} {'EMAIL':<30} {'EDAD':<5} {'FECHA CREACION'}") # para que sirve el :<5 ??? 
 
 		for usuario in usuarios:
 			id_usuario, nombre, email, edad, fecha = usuario
 			print(f"{id_usuario:<5} {nombre:<20} {email:<30} {edad:<5} {fecha}")
-
+		
+		print("└"+ "─" * 82 + "┘") # Carácter "Box Drawing" (línea sólida)
 		print(f"\nTotal de usuarios: {len(usuarios)}")
 
 	except Error as e:
 		print(f"Error al consultar usuarios: {e}")
 
-def buscar_usuario_por_email(conexion, email):
+def buscar_usuario_por_email(conexion, email_a_buscar):
 	try:
 		cursor=conexion.cursor()
 
 		buscar_sql = "SELECT * FROM usuarios WHERE email = %s"
-		cursor.execute(buscar_sql, (email,)) #????
+		cursor.execute(buscar_sql, (email_a_buscar,)) #????
 
 		usuario = cursor.fetchone()
 
@@ -99,13 +103,14 @@ def buscar_usuario_por_email(conexion, email):
 			print(f"	Edad: {usuario[3] or "N/A"}")
 			print(f"	Fecha de creacion: {usuario[4]}")
 		else:
-			print(f"No se ha encontrado usuario con email: {email}")
+			print(f"No se ha encontrado usuario con email: {email_a_buscar}")
 
 	except Error as e:
 		print(f"Error al buscar usuario por email: {e}")
 
 def main():
-
+	
+	print("Programa iniciado")
 	print("Ejemplo de conexion a MySQL")
 	print("=" * 50)
 	
@@ -125,9 +130,7 @@ def main():
 
 			print("\nBuscando usuario por Email...")
 
-			#buscar_usuario_por_email(conexion, "juan.perez@email.com")
-
-			email_a_buscar =input("Ingrese el email a buscar")
+			email_a_buscar =input("Ingrese el email a buscar: ")
 			buscar_usuario_por_email(conexion, email_a_buscar)
 
 		except Exception as e:
@@ -145,5 +148,5 @@ def main():
 		print("- Que exista la base de datos")
 
 if __name__ == "__main__":
-
+	limpiar_pantalla()
 	main()
